@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>Besos a través del tiempo</title>
+    <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.150.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.150.0/examples/jsm/",
+        "mindar-face-three": "https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-face-three.prod.js"
+      }
+    }
+  </script>
+    <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+    <div id="ar-container"></div>
+    <div id="ui-container">
+        <div id="info-card" class="info-card">
+            <h2>Sobre Guidarello</h2>
+            <div class="info-card-scroll">
+                <p>
+                    Guidarello Guidarelli fue un soldado italiano nacido a mediados del siglo XV en Rávena, Italia.
+                </p>
+                <p>
+                    En 1499 luchó como <em>condottiero</em> junto a César Borgia, actuando como espía para la República
+                    veneciana.
+                </p>
+                <p>
+                    El encargado de esculpir la estatua yacente del caballero fue Tullio Lombardo. Este escultor, famoso
+                    por la belleza de los rostros de sus monumentos funerarios, decidió retratar al condottiero cuando
+                    tenía aproximadamente 33 años.
+                </p>
+                <p>
+                    En el siglo XVIII comenzó a esparcirse por el mundo una leyenda entorno a esta bella escultura: si
+                    una mujer soltera besaba los labios del caballero Guidarelli, se casaría con un hombre maravilloso
+                    antes de un año. Si la mujer era casada, tendría un hijo tan apuesto como el soldado.
+                </p>
+                <p>
+                    Se calcula que Guidarello fue besado por más de 5 millones de mujeres de todo el mundo. Este es el
+                    motivo del leve tinte rojizo o carmín que se fue depositando sobre sus labios.
+                </p>
+                <p class="callout">
+                    Animáte a interactuar con el caballero para ver qué consejo amoroso te puede llegar, dejá y descubrí
+                    besos a través del tiempo.
+                </p>
+            </div>
+        </div>
+        <button id="start-btn" class="btn-start">Iniciar Experiencia</button>
+        <p class="indicador" id="instruction-text" style="display:none;">Enfoca la escultura y toca su rostro para dejar
+            un beso.</p>
+    </div>
+
+    <a href="https://www2.fba.unlp.edu.ar/areamuseo/" target="_blank" id="logo-link">
+        <img src="assets/logo.png" alt="Logo">
+    </a>
+
+    <div id="ver-button">
+        <img src="assets/sobre.png" alt="Ver besos">
+    </div>
+
+    <div id="kiss-modal">
+        <div id="kiss-content-modal">
+            <h3>Deja tu beso</h3>
+            <input type="text" id="kiss-name" placeholder="Tu nombre o apodo" />
+            <textarea id="kiss-message" placeholder="Escribe un opinión o consejo de amor..."></textarea>
+            <div id="btn-container-modal">
+                <button id="cancel-kiss-btn">Cancelar</button>
+                <button id="save-kiss-btn">Dejar Beso</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-kiss-card">
+        <button id="close-view-btn">&times;</button>
+        <h4 id="view-kiss-name"></h4>
+        <p id="view-kiss-message"></p>
+        <button id="next-kiss-btn">Siguiente Beso</button>
+    </div>
+
+    <div id="speech-bubble" class="hidden"></div>
+
+    <script type="module" src="/src/main.js"></script>
+</body>
+
+</html>
