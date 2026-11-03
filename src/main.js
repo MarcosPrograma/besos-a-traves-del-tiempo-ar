@@ -100,7 +100,7 @@ const startAR = async () => {
 
     // 3. Textura del beso
     const textureLoader = new THREE.TextureLoader();
-    const kissTexture = textureLoader.load('assets/besos_1.png');
+    const kissTexture = textureLoader.load('./assets/besos_1.png');
 
     // 4. Plano de interacción (Ubicado ligeramente hacia atrás en Z para no tapar los besos)
     const raycastPlane = new THREE.Mesh(
