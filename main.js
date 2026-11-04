@@ -85,7 +85,7 @@ const startAR = async () => {
                 facingMode: { exact: "environment" }
             };
         }
-        
+
         try {
             return await originalGetUserMedia(constraints);
         } catch (err) {
@@ -112,13 +112,13 @@ const startAR = async () => {
 
     const { renderer, scene, camera } = mindarThree;
 
-        // 1. Grupo ancla del rostro
-        const anchor = mindarThree.addAnchor(168);
-        anchor.group.frustumCulled = false;
+    // 1. Grupo ancla del rostro
+    const anchor = mindarThree.addAnchor(168);
+    anchor.group.frustumCulled = false;
 
-        // 2. Malla facial para tracking
-        const faceGeometry = mindarThree.addFaceMesh();
-        if(!faceGeometry.morphAttributes) {
+    // 2. Malla facial para tracking
+    const faceGeometry = mindarThree.addFaceMesh();
+    if (!faceGeometry.morphAttributes) {
         faceGeometry.morphAttributes = {};
     }
 
@@ -274,6 +274,19 @@ const startAR = async () => {
     // 6. Iniciar MindAR
     try {
         await mindarThree.start();
+
+        const videoElement = arContainer.querySelector('video');
+        const canvasElement = arContainer.querySelector('canvas');
+
+        if (videoElement) {
+            videoElement.style.transform = 'none';
+            videoElement.style.webkitTransform = 'none';
+        }
+        if (canvasElement) {
+            canvasElement.style.transform = 'none';
+            canvasElement.style.webkitTransform = 'none';
+        }
+
     } catch (error) {
         console.error("Error al iniciar la cámara trasera:", error);
         alert("Asegúrate de conceder permisos de cámara");
