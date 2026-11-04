@@ -160,8 +160,8 @@ export function createARScene(container, onKissSelected, onPlaneTouched) {
         try {
             await mindarThree.start();
             if (mindarThree.video) {
-                 mindarThree.video.style.transform = "none";
-                 mindarThree.video.style.objectFit = "cover";
+                 //mindarThree.video.style.transform = "none";
+                 //mindarThree.video.style.objectFit = "cover";
                  mindarThree.video.addEventListener('loadedmetadata', () => {
                     mindarThree.video.style.transform = "none";
                 });
