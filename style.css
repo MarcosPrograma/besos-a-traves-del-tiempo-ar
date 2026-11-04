@@ -60,6 +60,13 @@ body {
     overflow: hidden;
 }
 
+/* Transformación de cámara en espejo */
+#ar-container video,
+#ar-container canvas {
+    transform: none !important;
+    -webkit-transform: none !important;
+}
+
 #ui-container {
     position: fixed;
     top: 0;
