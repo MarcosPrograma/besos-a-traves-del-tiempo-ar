@@ -77,23 +77,48 @@ nextKissBtn.onclick = () => {
 closeViewBtn.onclick = () => { viewCard.style.display = 'none'; };
 
 const startAR = async () => {
+    const originalGetUserMedia = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
+
+    navigator.mediaDevices.getUserMedia = async (constraints) => {
+        if (constraints && constraints.video) {
+            constraints.video = {
+                facingMode: { exact: "environment" }
+            };
+        }
+        
+        try {
+            return await originalGetUserMedia(constraints);
+        } catch (err) {
+            console.warn("No se pudo forzar 'exact: environment', reintentando con 'environment' flexible:", err);
+            constraints.video.facingMode = "environment";
+            return await originalGetUserMedia(constraints);
+        }
+    };
+
     mindarThree = new MindARThree({
         container: arContainer,
-        facingMode: "environment",
-        userMediaConfig: {
-            video: { facingMode: "environment" }
+        facingMode: "environment"
+    });
+
+    navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: {
+            facingMode: 'environment', // 'environment' fuerza la cámara trasera
+            width: { ideal: 1280 },    // Opcional: Forzar HD
+            height: { ideal: 720 },    // Opcional: Forzar HD
+            focusMode: { ideal: "continuous" } // Opcional: Enfoque continuo
         }
     });
 
     const { renderer, scene, camera } = mindarThree;
 
-    // 1. Grupo ancla del rostro
-    const anchor = mindarThree.addAnchor(168);
-    anchor.group.frustumCulled = false;
+        // 1. Grupo ancla del rostro
+        const anchor = mindarThree.addAnchor(168);
+        anchor.group.frustumCulled = false;
 
-    // 2. Malla facial para tracking
-    const faceGeometry = mindarThree.addFaceMesh();
-    if (!faceGeometry.morphAttributes) {
+        // 2. Malla facial para tracking
+        const faceGeometry = mindarThree.addFaceMesh();
+        if(!faceGeometry.morphAttributes) {
         faceGeometry.morphAttributes = {};
     }
 
@@ -131,8 +156,8 @@ const startAR = async () => {
 
         const textureIndex = (kissData.kissIndex !== undefined && kissData.kissIndex < kissTextures.length) ? kissData.kissIndex : 0;
 
-        const selectedTexture = kissTextures[textureIndex]; 
-        
+        const selectedTexture = kissTextures[textureIndex];
+
         const spriteMaterial = new THREE.SpriteMaterial({
             map: selectedTexture,
             transparent: true,
@@ -227,7 +252,7 @@ const startAR = async () => {
         const name = nameInput.value.trim();
         const message = messageInput.value.trim();
 
-        if(!message){
+        if (!message) {
             alert("Por favor, ingresa un mensaje o consejo antes de guardar el beso.");
             messageInput.focus();
             return;
@@ -247,7 +272,15 @@ const startAR = async () => {
     };
 
     // 6. Iniciar MindAR
-    await mindarThree.start();
+    try {
+        await mindarThree.start();
+    } catch (error) {
+        console.error("Error al iniciar la cámara trasera:", error);
+        alert("Asegúrate de conceder permisos de cámara");
+    } finally {
+        // Restaurar la función original de getUserMedia por seguridad
+        navigator.mediaDevices.getUserMedia = originalGetUserMedia;
+    }
 
     renderer.setAnimationLoop(() => {
         renderer.render(scene, camera);
