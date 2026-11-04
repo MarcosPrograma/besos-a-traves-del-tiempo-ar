@@ -100,6 +100,10 @@ const startAR = async () => {
         facingMode: "environment"
     });
 
+    if (mindarThree.video) {
+        mindarThree.video.style.transform = "none";
+    }
+
     navigator.mediaDevices.getUserMedia({
         audio: false,
         video: {
@@ -274,18 +278,6 @@ const startAR = async () => {
     // 6. Iniciar MindAR
     try {
         await mindarThree.start();
-
-        const videoElement = arContainer.querySelector('video');
-        const canvasElement = arContainer.querySelector('canvas');
-
-        if (videoElement) {
-            videoElement.style.transform = 'none';
-            videoElement.style.webkitTransform = 'none';
-        }
-        if (canvasElement) {
-            canvasElement.style.transform = 'none';
-            canvasElement.style.webkitTransform = 'none';
-        }
 
     } catch (error) {
         console.error("Error al iniciar la cámara trasera:", error);
