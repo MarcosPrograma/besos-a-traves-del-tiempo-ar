@@ -8,9 +8,9 @@ export function createARScene(container, onKissSelected, onPlaneTouched) {
         facingMode: "environment"
     });
 
-    if (mindarThree.video) {
-        mindarThree.video.style.transform = "none"; 
-    }
+    /*if (mindarThree.video) {
+        mindarThree.video.style.transform = "none";
+    }*/
 
     const { renderer, scene, camera } = mindarThree;
 
@@ -18,16 +18,20 @@ export function createARScene(container, onKissSelected, onPlaneTouched) {
     const anchor = mindarThree.addAnchor(168);
     anchor.group.frustumCulled = false;
 
-    // Malla facial para tracking
+    // Malla facial para tracking e interacción
     const faceGeometry = mindarThree.addFaceMesh();
     if (!faceGeometry.morphAttributes) {
         faceGeometry.morphAttributes = {};
     }
 
-    const faceMaterial = new THREE.MeshBasicMaterial({ visible: false });
+    const faceMaterial = new THREE.MeshBasicMaterial({ 
+        visible: false,
+        side: THREE.DoubleSide
+    });
     const faceMesh = new THREE.Mesh(faceGeometry, faceMaterial);
     faceMesh.frustumCulled = false;
     scene.add(faceMesh);
+    anchor.group.add(faceMesh);
 
     //Texturas de los besos
     const textureLoader = new THREE.TextureLoader();
@@ -39,7 +43,7 @@ export function createARScene(container, onKissSelected, onPlaneTouched) {
         textureLoader.load('./assets/besos_5.png')
     ];
 
-    // Plano de interacción 
+    /* Plano de interacción 
     const raycastPlane = new THREE.Mesh(
         new THREE.PlaneGeometry(1.5, 1.5),
         new THREE.MeshBasicMaterial({ visible: false, side: THREE.DoubleSide })
@@ -47,12 +51,13 @@ export function createARScene(container, onKissSelected, onPlaneTouched) {
     raycastPlane.position.z = -0.005; //Detrás del rostro para evitar interferencias
     raycastPlane.frustumCulled = false;
     anchor.group.add(raycastPlane);
+    */
 
     // Estructuras de datos para gestionar los besos e interacciones
     const renderedKisses = new Map();
     const kissSpritesList = [];
 
-     // Renderizar o actualizar beso desde la base de datos (Firestore)
+    // Renderizar o actualizar beso desde la base de datos (Firestore)
     const renderKiss = (kissData) => {
         if (renderedKisses.has(kissData.id)) return;
 
@@ -107,11 +112,11 @@ export function createARScene(container, onKissSelected, onPlaneTouched) {
             return;
         }
 
-        // Si no hay intersección con un beso, verificar intersección con el plano de interacción para dejar beso
-        const planeIntersects = raycaster.intersectObject(raycastPlane);
+        // Si no hay intersección con un beso, verificar intersección con el mesh de interacción para dejar beso
+        const faceIntersects = raycaster.intersectObject(faceMesh);
 
-        if (planeIntersects.length > 0) {
-            const hit = planeIntersects[0];
+        if (faceIntersects.length > 0) {
+            const hit = faceIntersects[0];
             const point = hit.point.clone();
             anchor.group.worldToLocal(point);
 
@@ -154,6 +159,13 @@ export function createARScene(container, onKissSelected, onPlaneTouched) {
 
         try {
             await mindarThree.start();
+            if (mindarThree.video) {
+                 mindarThree.video.style.transform = "none";
+                 mindarThree.video.style.objectFit = "cover";
+                 mindarThree.video.addEventListener('loadedmetadata', () => {
+                    mindarThree.video.style.transform = "none";
+                });
+            }
         } catch (error) {
             console.error("Error al iniciar la cámara trasera:", error);
             alert("Asegúrate de conceder permisos de cámara");
