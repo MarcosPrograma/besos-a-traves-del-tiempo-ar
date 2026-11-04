@@ -22,13 +22,14 @@ export const db = getFirestore(app);
 const kissesCollection = collection(db, 'besos');
 
 // Guardar un nuevo beso en Firestore
-export const saveKiss = async (name, message, position, rotation) => {
+export const saveKiss = async (name, message, position, rotation, kissIndex) => {
     try {
         await addDoc(kissesCollection, {
-            nombre: name || "Anónimo",
+            nombre: name || "Caballero o Dama Anónima",
             mensaje: message || "",
             posicion: { x: position.x, y: position.y, z: position.z },
             rotacion: rotation,
+            kissIndex: kissIndex,
             timestamp: serverTimestamp()
         });
     } catch (error) {

@@ -20,10 +20,10 @@ const uiControl = new UIControl(dialogues, 40000);
 let mindarThree = null;
 let currentTargetPoint = null;
 let currentRotation = 0;
+let currentKissIndex = 0;
 
 // Lista local para guardar los besos recibidos de Firestore y navegar entre ellos
 let allKissesData = [];
-let currentKissIndex = 0;
 
 // Elementos UI
 const startBtn = document.getElementById('start-btn');
@@ -53,8 +53,8 @@ const displayKissData = (index) => {
         viewMessage.textContent = "¡Sé el primero en dejar un mensaje!";
     } else {
         const kiss = allKissesData[index];
-        viewName.textContent = kiss.nombre || "Anónimo";
-        viewMessage.textContent = `"${kiss.mensaje || 'Sin mensaje'}"`;
+        viewName.textContent = kiss.nombre || "Caballero o Dama Anónima";
+        viewMessage.textContent = `"${kiss.mensaje || 'Un caballero o damisela solo ha dejado un beso sin mensaje'}"`;
     }
     viewCard.style.display = 'block';
 };
@@ -79,6 +79,7 @@ closeViewBtn.onclick = () => { viewCard.style.display = 'none'; };
 const startAR = async () => {
     mindarThree = new MindARThree({
         container: arContainer,
+        facingMode: "environment"
     });
 
     const { renderer, scene, camera } = mindarThree;
@@ -100,7 +101,13 @@ const startAR = async () => {
 
     // 3. Textura del beso
     const textureLoader = new THREE.TextureLoader();
-    const kissTexture = textureLoader.load('./assets/besos_1.png');
+    const kissTextures = [
+        textureLoader.load('./assets/besos_1.png'),
+        textureLoader.load('./assets/besos_2.png'),
+        textureLoader.load('./assets/besos_3.png'),
+        textureLoader.load('./assets/besos_4.png'),
+        textureLoader.load('./assets/besos_5.png')
+    ];
 
     // 4. Plano de interacción (Ubicado ligeramente hacia atrás en Z para no tapar los besos)
     const raycastPlane = new THREE.Mesh(
@@ -119,8 +126,12 @@ const startAR = async () => {
     const renderKiss = (kissData) => {
         if (renderedKisses.has(kissData.id)) return;
 
+        const textureIndex = (kissData.kissIndex !== undefined && kissData.kissIndex < kissTextures.length) ? kissData.kissIndex : 0;
+
+        const selectedTexture = kissTextures[textureIndex]; 
+        
         const spriteMaterial = new THREE.SpriteMaterial({
-            map: kissTexture,
+            map: selectedTexture,
             transparent: true,
             depthTest: true
         });
@@ -136,8 +147,8 @@ const startAR = async () => {
 
         // Guardar la información del mensaje dentro del objeto 3D
         kissSprite.userData = {
-            nombre: kissData.nombre || 'Anónimo',
-            mensaje: kissData.mensaje || '(Sin mensaje)'
+            nombre: kissData.nombre || 'Caballero o Dama Anónima',
+            mensaje: kissData.mensaje || '(Un caballero o damisela solo ha dejado un beso sin mensaje)'
         };
 
         anchor.group.add(kissSprite);
@@ -200,6 +211,8 @@ const startAR = async () => {
             currentTargetPoint = point;
             currentRotation = (Math.random() - 0.5) * 0.4;
 
+            currentKissIndex = Math.floor(Math.random() * kissTextures.length)
+
             modal.style.display = 'flex';
         }
     };
@@ -211,8 +224,14 @@ const startAR = async () => {
         const name = nameInput.value.trim();
         const message = messageInput.value.trim();
 
+        if(!message){
+            alert("Por favor, ingresa un mensaje o consejo antes de guardar el beso.");
+            messageInput.focus();
+            return;
+        }
+
         if (currentTargetPoint) {
-            await saveKiss(name, message, currentTargetPoint, currentRotation);
+            await saveKiss(name, message, currentTargetPoint, currentRotation, currentKissIndex);
         }
 
         nameInput.value = '';

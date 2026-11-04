@@ -93,7 +93,7 @@ body {
 
 .info-card h2 {
     margin: 0 0 14px 0;
-    font-size: 20px;
+    font-size: 1.2rem;
     font-weight: 700;
     color: #111;
     text-align: left;
@@ -106,8 +106,8 @@ body {
 
 .info-card-scroll p {
     margin: 0 0 12px 0;
-    font-size: 13.5px;
-    line-height: 1.45;
+    font-size: 1.2rem;
+    line-height: 1.5;
     color: #222;
     text-align: left;
 }
@@ -132,7 +132,7 @@ body {
     pointer-events: auto;
     width: 90%;
     padding: 1rem 2rem;
-    font-size: 1rem;
+    font-size: 1.2rem;
     font-weight: 600;
     color: #ffffff;
     background: #D82225;
@@ -154,6 +154,8 @@ body {
     text-align: center;
     position: fixed;
     bottom: 2rem;
+    max-width: 90%;
+    width: 90%;
 }
 
 /* --------------MODAL -------------- */
@@ -183,7 +185,7 @@ body {
 
 #kiss-content-modal h3 {
     margin: 0 0 16px 0;
-    font-size: 20px;
+    font-size: 1.2rem;
     font-weight: 700;
     color: #000;
 }
@@ -195,7 +197,7 @@ body {
     border: none;
     border-radius: 12px;
     background: #F3CDE6;
-    font-size: 14px;
+    font-size: 1rem;
     font-family: inherit;
     box-sizing: border-box;
     outline: none;
@@ -214,7 +216,7 @@ body {
     border: none;
     border-radius: 14px;
     background: #F3CDE6;
-    font-size: 14px;
+    font-size: 1rem;
     font-family: inherit;
     box-sizing: border-box;
     resize: none;
@@ -234,7 +236,7 @@ body {
     background: #D3D3D3;
     color: #222;
     border-radius: 20px;
-    font-size: 15px;
+    font-size: 1rem;
     font-weight: 500;
     font-family: inherit;
     cursor: pointer;
@@ -247,7 +249,7 @@ body {
     background: #D82225;
     border: 2px solid #F04F51;
     border-radius: 20px;
-    font-size: 15px;
+    font-size: 1rem;
     font-weight: 600;
     font-family: inherit;
     cursor: pointer;
@@ -276,7 +278,7 @@ body {
 #view-kiss-name h4 {
     margin: 0 0 16px 0;
     color: #fff;
-    font-size: 20px;
+    font-size: 1.2rem;
     font-weight: 700;
 }
 
@@ -286,7 +288,7 @@ body {
 
 #view-kiss-message {
     margin: 0 0 24px 0;
-    font-size: 15px;
+    font-size: 1rem;
     line-height: 1.4;
     color: #fff;
     font-weight: 400;
@@ -312,7 +314,7 @@ body {
     background: #D82225;
     border: 2px solid #F04F51;
     border-radius: 20px;
-    font-size: 15px;
+    font-size: 1rem;
     font-weight: 500;
     font-family: inherit;
     cursor: pointer;
@@ -320,17 +322,16 @@ body {
 }
 
 /* -------------- SPEECH BUBBLE -------------- */
-/* Globo de diálogo */
 #speech-bubble {
   position: fixed;
-  top: 5rem; /* debajo del logo */
-  left: 1.5rem;
-  max-width: 260px;
+  top: 5rem; 
+  left: 1rem;
+  max-width: 300px;
   padding: 1rem 1.2rem;
   background: rgba(255, 255, 255, 0.9);
   border-radius: 20px;
   border: 2px solid rgba(180, 100, 70, 0.5);
-  font-size: 0.9rem;
+  font-size: 1rem;
   color: #5b2c1b;
   font-weight: 500;
   line-height: 1.3;
