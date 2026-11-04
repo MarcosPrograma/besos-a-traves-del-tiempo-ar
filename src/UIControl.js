@@ -1,18 +1,18 @@
 export class UIControl {
     constructor(dialogues, intervalTime = 10000) {
-        // Elementos DOM
+        //elementos DOM
         this.speechBubble = document.getElementById("speech-bubble");
         this.dialogues = dialogues;
         
-        // Estado del temporizador y diálogos
+        //estado del temporizador y diálogos
         this.currentDialogueIndex = 0;
         this.dialogueInterval = null;
-        this.intervalTime = intervalTime; // Tiempo entre frases (10 seg por defecto)
+        this.intervalTime = intervalTime;
 
         this.speechTimeout = null;
         this.transitionTimeout = null;
 
-        // Estado por ancla/target (para tracking multicara/target)
+        //estado por ancla/target (para tracking multicara/target)
         this.currentTargetIndex = 0;
         this.targetStates = {};
     }
@@ -26,20 +26,20 @@ export class UIControl {
         }
     }
 
-    // Iniciar la secuencia automática de frases
+    //iniciar la secuencia de frases
     startAutoDialogues() {
         if (!this.dialogues || this.dialogues.length === 0) return;
 
-        // Mostrar la primera frase inmediatamente
+        //mostrar la primera frase 
         this.showSpeechBubble(this.currentDialogueIndex);
 
-        // Configurar el intervalo para cambiar de frase automáticamente
+        //configurar el intervalo para cambiar de frase
         this.dialogueInterval = setInterval(() => {
             this.showNextDialogue();
         }, this.intervalTime);
     }
 
-    // Detener la secuencia automática
+    //detener la secuencia automática
     stopAutoDialogues() {
         if (this.dialogueInterval) {
             clearInterval(this.dialogueInterval);
@@ -48,13 +48,13 @@ export class UIControl {
         this.hideSpeechBubble(true);
     }
 
-    // Avanzar al siguiente diálogo
+    //avanzar al siguiente diálogo
     showNextDialogue() {
         this.currentDialogueIndex = (this.currentDialogueIndex + 1) % this.dialogues.length;
         this.showSpeechBubble(this.currentDialogueIndex);
     }
 
-    // Mostrar una burbuja específica
+    //mostrar una burbuja específica
     showSpeechBubble(dialogueIndex, targetIndex = this.currentTargetIndex) {
         const bubble = this.speechBubble;
         if (!bubble || this.dialogues[dialogueIndex] === undefined) return;
@@ -75,7 +75,7 @@ export class UIControl {
             bubble.classList.add("visible");
         });
 
-        // Ocultar suavemente la burbuja a los 7 segundos para dar paso al siguiente ciclo
+        //ocultar la burbuja a los 7 segundos para dar paso al siguiente ciclo
         this.speechTimeout = setTimeout(() => {
             this.hideSpeechBubble(false, targetIndex);
         }, 7000); 
@@ -97,13 +97,14 @@ export class UIControl {
         if (forceImmediate) {
             bubble.classList.add("hidden");
         } else {
-            // Esperar a que finalice la animación CSS de fade-out (2 segundos)
+            //esperar a que finalice el fade-out
             this.transitionTimeout = setTimeout(() => {
                 bubble.classList.add("hidden");
             }, 2000);
         }
     }
 
+    /*
     _hideBubbleDOMOnly() {
         const bubble = this.speechBubble;
         if (!bubble) return;
@@ -112,6 +113,7 @@ export class UIControl {
         bubble.classList.remove("visible");
         bubble.classList.add("hidden");
     }
+    */
 
     onTargetFound(targetIndex) {
         this.currentTargetIndex = targetIndex;
@@ -119,7 +121,7 @@ export class UIControl {
 
         const state = this.targetStates[targetIndex];
 
-        // Al enfocar el rostro, reanudar diálogos si estaban pausados
+        //al enfocar el rostro, reanudar diálogos si estaban pausados
         if (!this.dialogueInterval) {
             this.startAutoDialogues();
         } else if (state.isBubbleActive && state.currentStep !== null) {
@@ -130,4 +132,86 @@ export class UIControl {
     onTargetLost(targetIndex) {
         this.hideSpeechBubble(true, targetIndex);
     }
+}
+
+// -----------------------------------------------
+
+export function setupDOMUI(getKissesData, onSaveKiss, isExperienceStarted) {
+    //modal para crear beso
+    const modal = document.getElementById('kiss-modal');
+    const nameInput = document.getElementById('kiss-name');
+    const messageInput = document.getElementById('kiss-message');
+    const saveKissBtn = document.getElementById('save-kiss-btn');
+    const cancelKissBtn = document.getElementById('cancel-kiss-btn');
+
+    //modal para ver mensajes
+    const viewCard = document.getElementById('view-kiss-card');
+    const viewName = document.getElementById('view-kiss-name');
+    const viewMessage = document.getElementById('view-kiss-message');
+    const closeViewBtn = document.getElementById('close-view-btn');
+    const nextKissBtn = document.getElementById('next-kiss-btn');
+    const verButton = document.getElementById('ver-button');
+
+    let currentKissIndex = 0;
+
+    //función para mostrar el beso actual
+    const displayKissData = (index) => {
+        const kisses = getKissesData();
+        if (kisses.length === 0) {
+            viewName.textContent = "Sin besos aún";
+            viewMessage.textContent = "¡Sé el primero en dejar un mensaje!";
+        } else {
+            const kiss = kisses[index];
+            viewName.textContent = kiss.nombre || "Caballero o Dama Anónima";
+            viewMessage.textContent = `"${kiss.mensaje || 'Un caballero o damisela solo ha dejado un beso sin mensaje'}"`;
+        }
+        viewCard.style.display = 'block';
+    };
+
+    // botón ver para abrir y leer mensajes 
+    verButton.onclick = () => {
+        if (!isExperienceStarted() || modal.style.display === 'flex') return;
+        currentKissIndex = 0;
+        displayKissData(currentKissIndex);
+    };
+
+    // botón para avanzar al siguiente beso de forma cíclica
+    nextKissBtn.onclick = () => {
+        const kisses = getKissesData();
+        if (kisses.length > 0) {
+            currentKissIndex = (currentKissIndex + 1) % kisses.length;
+            displayKissData(currentKissIndex);
+        }
+    };
+
+    closeViewBtn.onclick = () => { viewCard.style.display = 'none'; };
+
+    //guardar beso 
+    saveKissBtn.onclick = async () => {
+        const name = nameInput.value.trim();
+        const message = messageInput.value.trim();
+
+        if (!message) {
+            alert("Por favor, ingresa un mensaje o consejo antes de guardar el beso.");
+            messageInput.focus();
+            return;
+        }
+
+        await onSaveKiss(name, message);
+
+        nameInput.value = '';
+        messageInput.value = '';
+        modal.style.display = 'none';
+    };
+
+    cancelKissBtn.onclick = () => {
+        modal.style.display = 'none';
+    };
+
+    return {
+        displayKissData,
+        setCurrentKissIndex: (idx) => { currentKissIndex = idx; },
+        hideViewCard: () => { viewCard.style.display = 'none'; },
+        showModal: () => { modal.style.display = 'flex'; }
+    };
 }

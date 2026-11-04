@@ -21,7 +21,7 @@ export const db = getFirestore(app);
 
 const kissesCollection = collection(db, 'besos');
 
-// Guardar un nuevo beso en Firestore
+//Guardar un nuevo beso en Firestore
 export const saveKiss = async (name, message, position, rotation, kissIndex) => {
     try {
         await addDoc(kissesCollection, {
@@ -33,11 +33,11 @@ export const saveKiss = async (name, message, position, rotation, kissIndex) => 
             timestamp: serverTimestamp()
         });
     } catch (error) {
-        console.error("Error al guardar el beso en Firestore:", error);
+        console.error("Error al guardar el beso en la base de datos:", error);
     }
 };
 
-// Escuchar los besos guardados en tiempo real
+//Ver los besos guardados
 export const subscribeToKisses = (callback) => {
     return onSnapshot(kissesCollection, (snapshot) => {
         const kisses = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
