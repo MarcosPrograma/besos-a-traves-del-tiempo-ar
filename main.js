@@ -79,7 +79,10 @@ closeViewBtn.onclick = () => { viewCard.style.display = 'none'; };
 const startAR = async () => {
     mindarThree = new MindARThree({
         container: arContainer,
-        facingMode: "environment"
+        facingMode: "environment",
+        userMediaConfig: {
+            video: { exact: "environment" }
+        }
     });
 
     const { renderer, scene, camera } = mindarThree;
