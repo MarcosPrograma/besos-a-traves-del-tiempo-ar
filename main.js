@@ -81,7 +81,7 @@ const startAR = async () => {
         container: arContainer,
         facingMode: "environment",
         userMediaConfig: {
-            video: { exact: "environment" }
+            video: { facingMode: "environment" }
         }
     });
 
