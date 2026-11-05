@@ -8,9 +8,9 @@ export function createARScene(container, onKissSelected, onPlaneTouched) {
         facingMode: "environment"
     });
 
-    /*if (mindarThree.video) {
-        mindarThree.video.style.transform = "none";
-    }*/
+    if (mindarThree.video) {
+        mindarThree.video.style.transform = "none"; 
+    }
 
     const { renderer, scene, camera } = mindarThree;
 
@@ -18,22 +18,18 @@ export function createARScene(container, onKissSelected, onPlaneTouched) {
     const anchor = mindarThree.addAnchor(168);
     anchor.group.frustumCulled = false;
 
-    // Malla facial para tracking e interacción
+    // Malla facial para tracking
     const faceGeometry = mindarThree.addFaceMesh();
     if (!faceGeometry.morphAttributes) {
         faceGeometry.morphAttributes = {};
     }
 
-    const faceMaterial = new THREE.MeshBasicMaterial({ 
-        visible: false,
-        side: THREE.DoubleSide
-    });
+    const faceMaterial = new THREE.MeshBasicMaterial({ visible: false });
     const faceMesh = new THREE.Mesh(faceGeometry, faceMaterial);
     faceMesh.frustumCulled = false;
     scene.add(faceMesh);
-    anchor.group.add(faceMesh);
 
-    //Texturas de los besos
+    // Texturas de los besos
     const textureLoader = new THREE.TextureLoader();
     const kissTextures = [
         textureLoader.load('./assets/besos_1.png'),
@@ -43,15 +39,23 @@ export function createARScene(container, onKissSelected, onPlaneTouched) {
         textureLoader.load('./assets/besos_5.png')
     ];
 
-    /* Plano de interacción 
-    const raycastPlane = new THREE.Mesh(
-        new THREE.PlaneGeometry(1.5, 1.5),
-        new THREE.MeshBasicMaterial({ visible: false, side: THREE.DoubleSide })
+    // Esfera de interacción
+    const sphereGeometry = new THREE.SphereGeometry(0.75, 32, 32);
+    const raycastSphere = new THREE.Mesh(
+        sphereGeometry,
+        new THREE.MeshBasicMaterial({ 
+            color: 0x00ff00,
+            wireframe: true,
+            visible: true, 
+            side: THREE.DoubleSide 
+        })
     );
-    raycastPlane.position.z = -0.005; //Detrás del rostro para evitar interferencias
-    raycastPlane.frustumCulled = false;
-    anchor.group.add(raycastPlane);
-    */
+
+    // Centrar la esfera ligeramente hacia atrás para abrazar la cara del ancla
+    raycastSphere.position.set(0, 0, -0.5);
+    raycastSphere.frustumCulled = false;
+
+    anchor.group.add(raycastSphere);
 
     // Estructuras de datos para gestionar los besos e interacciones
     const renderedKisses = new Map();
@@ -72,10 +76,11 @@ export function createARScene(container, onKissSelected, onPlaneTouched) {
         const kissSprite = new THREE.Sprite(spriteMaterial);
         kissSprite.scale.set(0.12, 0.12, 1);
 
+        // Posicionar en la coordenada 3D capturada de la esfera
         kissSprite.position.set(
             kissData.posicion.x,
             kissData.posicion.y,
-            kissData.posicion.z + 0.015
+            kissData.posicion.z + 0.005 // Pequeño offset para evitar Z-fighting con la esfera
         );
         kissSprite.material.rotation = kissData.rotacion || 0;
 
@@ -98,12 +103,20 @@ export function createARScene(container, onKissSelected, onPlaneTouched) {
     const handlePointerDown = (event, isModalOrCardOpen) => {
         if (isModalOrCardOpen()) return;
 
-        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+        // Normalización exacta en canvas o viewport
+        const rect = renderer.domElement.getBoundingClientRect();
+        const clientX = event.clientX !== undefined ? event.clientX : (event.touches && event.touches[0] ? event.touches[0].clientX : 0);
+        const clientY = event.clientY !== undefined ? event.clientY : (event.touches && event.touches[0] ? event.touches[0].clientY : 0);
+
+        mouse.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+        mouse.y = -((clientY - rect.top) / rect.height) * 2 + 1;
+
+        scene.updateMatrixWorld(true);
+        camera.updateMatrixWorld(true);
 
         raycaster.setFromCamera(mouse, camera);
 
-        // Verificar intersección con los sprites de besos
+        // 1. Verificar intersección con los sprites de besos
         const kissIntersects = raycaster.intersectObjects(kissSpritesList, false);
 
         if (kissIntersects.length > 0) {
@@ -112,12 +125,14 @@ export function createARScene(container, onKissSelected, onPlaneTouched) {
             return;
         }
 
-        // Si no hay intersección con un beso, verificar intersección con el mesh de interacción para dejar beso
-        const faceIntersects = raycaster.intersectObject(faceMesh);
+        // 2. Verificar intersección sobre la esfera
+        const sphereIntersects = raycaster.intersectObject(raycastSphere);
 
-        if (faceIntersects.length > 0) {
-            const hit = faceIntersects[0];
+        if (sphereIntersects.length > 0) {
+            const hit = sphereIntersects[0];
             const point = hit.point.clone();
+            
+            // Convertir la posición de colisión a coordenadas locales del ancla
             anchor.group.worldToLocal(point);
 
             const rotation = (Math.random() - 0.5) * 0.4;
@@ -128,7 +143,6 @@ export function createARScene(container, onKissSelected, onPlaneTouched) {
     };
 
     const start = async () => {
-        // Forzar el uso de la cámara trasera en dispositivos móviles sin modo espejo
         const originalGetUserMedia = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
 
         navigator.mediaDevices.getUserMedia = async (constraints) => {
@@ -147,25 +161,8 @@ export function createARScene(container, onKissSelected, onPlaneTouched) {
             }
         };
 
-        navigator.mediaDevices.getUserMedia({
-            audio: false,
-            video: {
-                facingMode: 'environment',
-                width: { ideal: 1280 },
-                height: { ideal: 720 },
-                focusMode: { ideal: "continuous" }
-            }
-        });
-
         try {
             await mindarThree.start();
-            if (mindarThree.video) {
-                 mindarThree.video.style.transform = "none";
-                 mindarThree.video.style.objectFit = "cover";
-                 mindarThree.video.addEventListener('loadedmetadata', () => {
-                    mindarThree.video.style.transform = "none";
-                });
-            }
         } catch (error) {
             console.error("Error al iniciar la cámara trasera:", error);
             alert("Asegúrate de conceder permisos de cámara");

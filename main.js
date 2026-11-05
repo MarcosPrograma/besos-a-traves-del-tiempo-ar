@@ -5,25 +5,19 @@ import { createARScene } from "./src/scene.js";
 
 const uiControl = new UIControl(dialogues, 40000);
 
-// Lista local para guardar los besos recibidos de Firestore y navegar entre ellos
 let allKissesData = [];
-
 let currentTargetPoint = null;
 let currentRotation = 0;
 let currentKissIndex = 0;
 let isExperienceStarted = false;
 
-// Elementos UI
 const startBtn = document.getElementById('start-btn');
 const instructionText = document.getElementById('instruction-text');
 const arContainer = document.getElementById('ar-container');
 const infoCard = document.getElementById('info-card');
 const verButton = document.getElementById('ver-button');
 
-// Modal para crear beso
 const modal = document.getElementById('kiss-modal');
-
-// Modal para ver beso con mensaje
 const viewCard = document.getElementById('view-kiss-card');
 
 const domUI = setupDOMUI(
@@ -55,12 +49,27 @@ const arScene = createARScene(
     }
 );
 
+// Delegación global de interacción por puntero/toque
 window.addEventListener('pointerdown', (e) => {
     if (!isExperienceStarted) return;
-    arScene.handlePointerDown(e, () => modal.style.display === 'flex' || viewCard.style.display === 'block');
+
+    // Si la interacción ocurre dentro de modales o botones HTML, se descarta el raycast
+    if (e.target.closest('#ui-container') || 
+        e.target.closest('#kiss-modal') || 
+        e.target.closest('#view-kiss-card') || 
+        e.target.closest('#ver-button') ||
+        e.target.closest('#logo-link')) {
+        return;
+    }
+
+    arScene.handlePointerDown(
+        e, 
+        () => modal.style.display === 'flex' || viewCard.style.display === 'block'
+    );
 });
 
 subscribeToKisses((kisses) => {
+    console.log("Besos actualizados desde Firestore:", kisses);
     allKissesData = kisses;
     kisses.forEach(kiss => {
         if (kiss.posicion) {
