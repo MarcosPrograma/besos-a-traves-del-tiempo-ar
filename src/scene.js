@@ -5,12 +5,15 @@ export function createARScene(container, onKissSelected, onPlaneTouched) {
     // Forzar el uso de la cámara trasera en dispositivos móviles sin modo espejo
     let mindarThree = new MindARThree({
         container: container,
-        facingMode: "environment"
+        facingMode: "environment",
+        disableFaceMirror: true
     });
 
+    /*
     if (mindarThree.video) {
         mindarThree.video.style.transform = "none"; 
     }
+    */
 
     const { renderer, scene, camera } = mindarThree;
 

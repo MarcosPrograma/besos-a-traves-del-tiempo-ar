@@ -64,9 +64,11 @@ body {
     overflow: hidden;
 }
 
-#ar-container video {
-    transform: scaleX(-1)
-}
+/*
+#ar-container video,
+#ar-container canvas {
+    transform: scaleX(1) !important;
+}*/
 
 /*
 #ar-container video, 
