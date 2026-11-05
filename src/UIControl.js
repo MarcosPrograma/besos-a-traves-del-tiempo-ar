@@ -154,6 +154,16 @@ export function setupDOMUI(getKissesData, onSaveKiss, isExperienceStarted) {
 
     let currentKissIndex = 0;
 
+    // Acomodar la vista del modal al abrir el teclado
+    const handleInputFocus = (e) => {
+        setTimeout(() => {
+            e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 300);
+    };
+
+    nameInput.addEventListener('focus', handleInputFocus);
+    messageInput.addEventListener('focus', handleInputFocus);
+
     //función para mostrar el beso actual
     const displayKissData = (index) => {
         const kisses = getKissesData();
@@ -212,6 +222,6 @@ export function setupDOMUI(getKissesData, onSaveKiss, isExperienceStarted) {
         displayKissData,
         setCurrentKissIndex: (idx) => { currentKissIndex = idx; },
         hideViewCard: () => { viewCard.style.display = 'none'; },
-        showModal: () => { modal.style.display = 'flex'; }
+        showModal: () => { modal.style.display = 'flex'; modal.scrollTop = 0; }
     };
 }
