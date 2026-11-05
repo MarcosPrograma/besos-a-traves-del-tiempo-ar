@@ -60,6 +60,11 @@ body {
     overflow: hidden;
 }
 
+#ar-container video{
+    transform: none !important;
+    object-fit: cover !important;
+}
+
 #ui-container {
     position: fixed;
     top: 0;
