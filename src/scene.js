@@ -1,12 +1,15 @@
 import * as THREE from 'three';
 import { MindARThree } from 'mindar-face-three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 export function createARScene(container, onKissSelected, onPlaneTouched) {
     // Forzar el uso de la cámara trasera en dispositivos móviles sin modo espejo
     let mindarThree = new MindARThree({
         container: container,
         facingMode: "environment",
-        disableFaceMirror: true
+        disableFaceMirror: true,
+        filterMinCF: 0.0001,
+        //filterBeta: 0.001
     });
 
     /*
@@ -21,6 +24,7 @@ export function createARScene(container, onKissSelected, onPlaneTouched) {
     const anchor = mindarThree.addAnchor(168);
     anchor.group.frustumCulled = false;
 
+    /*
     // Malla facial para tracking
     const faceGeometry = mindarThree.addFaceMesh();
     if (!faceGeometry.morphAttributes) {
@@ -31,6 +35,39 @@ export function createARScene(container, onKissSelected, onPlaneTouched) {
     const faceMesh = new THREE.Mesh(faceGeometry, faceMaterial);
     faceMesh.frustumCulled = false;
     scene.add(faceMesh);
+    */
+
+    let customFaceModel = null;
+
+    const gltfLoader = new GLTFLoader();
+    gltfLoader.load(
+        './assets/faceGuidarello.glb',
+        (gltf) => {
+            customFaceModel = gltf.scene;
+
+            customFaceModel.traverse((node) => {
+                if (node.isMesh) {
+                    node.frustumCulled = false;
+                    node.material = new THREE.MeshBasicMaterial({
+                        transparent: true,
+                        opacity: 0,
+                        //color: 0xff007f,
+                        //wireframe: true,
+                        side: THREE.DoubleSide,
+                        depthWrite: false
+                    });
+                }
+            });
+            customFaceModel.position.set(0, 0, -0.75);
+
+            anchor.group.add(customFaceModel);
+            console.log("Modelo cargado e instalado");
+        },
+        undefined,
+        (error) => {
+            console.error("Error al cargar el modelo", error);
+        }
+    );
 
     // Texturas de los besos
     const textureLoader = new THREE.TextureLoader();
@@ -42,6 +79,11 @@ export function createARScene(container, onKissSelected, onPlaneTouched) {
         textureLoader.load('./assets/besos_5.png')
     ];
 
+    kissTextures.forEach(tex => {
+        tex.colorSpace = THREE.SRGBColorSpace;
+    });
+
+    /*
     // Esfera de interacción
     const sphereGeometry = new THREE.SphereGeometry(0.75, 32, 32);
     const raycastSphere = new THREE.Mesh(
@@ -57,8 +99,8 @@ export function createARScene(container, onKissSelected, onPlaneTouched) {
     // Centrar la esfera ligeramente hacia atrás para abrazar la cara del ancla
     raycastSphere.position.set(0, 0, -0.5);
     raycastSphere.frustumCulled = false;
-
     anchor.group.add(raycastSphere);
+    */
 
     // Estructuras de datos para gestionar los besos e interacciones
     const renderedKisses = new Map();
@@ -66,19 +108,33 @@ export function createARScene(container, onKissSelected, onPlaneTouched) {
 
     // Renderizar o actualizar beso desde la base de datos (Firestore)
     const renderKiss = (kissData) => {
+        if (!kissData || !kissData.id || !kissData.posicion) return;
         if (renderedKisses.has(kissData.id)) return;
 
-        const textureIndex = (kissData.kissIndex !== undefined && kissData.kissIndex < kissTextures.length) ? kissData.kissIndex : 0;
+        //const textureIndex = (kissData.kissIndex !== undefined && kissData.kissIndex < kissTextures.length) ? kissData.kissIndex : 0;
+        const rawIndex = parseInt(kissData.kissIndex, 10);
+        const textureIndex = (!isNaN(rawIndex) && rawIndex >= 0 && rawIndex < kissTextures.length) ? rawIndex : 0;
         const selectedTexture = kissTextures[textureIndex];
 
         const spriteMaterial = new THREE.SpriteMaterial({
             map: selectedTexture,
             transparent: true,
-            depthTest: true
+            depthTest: true,
+            depthWrite: false
         });
+
         const kissSprite = new THREE.Sprite(spriteMaterial);
+        kissSprite.renderOrder = 10;
         kissSprite.scale.set(0.12, 0.12, 1);
 
+        const posX = parseFloat(kissData.posicion.x) || 0;
+        const posY = parseFloat(kissData.posicion.y) || 0;
+        const posZ = parseFloat(kissData.posicion.z) || 0;
+
+        kissSprite.position.set(posX, posY, posZ, 0.005);
+        kissSprite.material.rotation = parseFloat(kissData.rotation) || 0;
+
+        /*
         // Posicionar en la coordenada 3D capturada de la esfera
         kissSprite.position.set(
             kissData.posicion.x,
@@ -86,9 +142,11 @@ export function createARScene(container, onKissSelected, onPlaneTouched) {
             kissData.posicion.z + 0.005 // Pequeño offset para evitar Z-fighting con la esfera
         );
         kissSprite.material.rotation = kissData.rotacion || 0;
+        */
 
         // Guardar la información del mensaje dentro del objeto 3D
         kissSprite.userData = {
+            id: kissData.id,
             nombre: kissData.nombre || 'Caballero o Dama Anónima',
             mensaje: kissData.mensaje || '(Un caballero o damisela solo ha dejado un beso sin mensaje)'
         };
@@ -100,7 +158,7 @@ export function createARScene(container, onKissSelected, onPlaneTouched) {
 
     // Raycaster y lógica para ver besos 
     const raycaster = new THREE.Raycaster();
-    raycaster.params.Sprite = { threshold: 0.05 };
+    raycaster.params.Sprite = { threshold: 0.15 };
     const mouse = new THREE.Vector2();
 
     const handlePointerDown = (event, isModalOrCardOpen) => {
@@ -119,7 +177,7 @@ export function createARScene(container, onKissSelected, onPlaneTouched) {
 
         raycaster.setFromCamera(mouse, camera);
 
-        // 1. Verificar intersección con los sprites de besos
+        //Verificar intersección con los sprites de besos
         const kissIntersects = raycaster.intersectObjects(kissSpritesList, false);
 
         if (kissIntersects.length > 0) {
@@ -128,9 +186,10 @@ export function createARScene(container, onKissSelected, onPlaneTouched) {
             return;
         }
 
-        // 2. Verificar intersección sobre la esfera
+        /*
+        //Verificar intersección sobre la esfera
         const sphereIntersects = raycaster.intersectObject(raycastSphere);
-
+        
         if (sphereIntersects.length > 0) {
             const hit = sphereIntersects[0];
             const point = hit.point.clone();
@@ -142,6 +201,27 @@ export function createARScene(container, onKissSelected, onPlaneTouched) {
             const kissIndex = Math.floor(Math.random() * kissTextures.length);
 
             onPlaneTouched(point, rotation, kissIndex);
+        }
+        */
+
+        if (customFaceModel) {
+            customFaceModel.updateMatrixWorld(true);
+            anchor.group.updateMatrixWorld(true);
+
+            const modelIntersects = raycaster.intersectObject(customFaceModel, true);
+
+            if (modelIntersects.length > 0) {
+                const hit = modelIntersects[0];
+                const point = hit.point.clone();
+
+                // Convertir la posición de colisión a coordenadas locales del ancla
+                anchor.group.worldToLocal(point);
+
+                const rotation = (Math.random() - 0.5) * 0.4;
+                const kissIndex = Math.floor(Math.random() * kissTextures.length);
+
+                onPlaneTouched(point, rotation, kissIndex);
+            }
         }
     };
 
@@ -163,6 +243,20 @@ export function createARScene(container, onKissSelected, onPlaneTouched) {
                 return await originalGetUserMedia(constraints);
             }
         };
+
+        navigator.mediaDevices.getUserMedia({
+            audio: false,
+            video: {
+                facingMode: 'environment',
+                width: { ideal: 1920, min: 1280 },
+                height: { ideal: 1080, min: 720 },
+                focusMode: { ideal: "continuous" }
+            }
+        });
+
+        if (mindarThree.video) {
+            mindarThree.video.style.filter = "contrast(1.15) brightness(1.05) sharpen(1.1)";
+        }
 
         try {
             await mindarThree.start();
